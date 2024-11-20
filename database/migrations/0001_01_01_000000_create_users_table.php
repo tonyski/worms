@@ -13,27 +13,17 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->rememberToken();
+            $table->string('openid')->unique()->comment('微信用户唯一标识');
+            $table->string('nickname')->comment('用户昵称');
+            $table->string('avatar')->comment('用户头像URL');
+            $table->string('session_key')->comment('微信 session_key');
+            $table->string('name')->nullable()->comment('用户姓名');
+            $table->string('phone')->nullable()->comment('用户手机号');
+            $table->tinyInteger('gender')->default(0)->comment('用户性别');
+            $table->string('emergency_phone')->nullable()->comment('紧急联系人电话');
+            $table->text('introduction')->nullable();
+            $table->timestamp('last_login_at')->nullable();
             $table->timestamps();
-        });
-
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
-        });
-
-        Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
         });
     }
 
@@ -43,7 +33,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('sessions');
     }
 };
