@@ -5,9 +5,9 @@ namespace App\Enums;
 enum TeamApplicationStatus: string
 {
         // 待审核
-    case PENDING = 'pending';
+    case PENDING = '待审核';
         // 审核通过
-    case APPROVED = 'approved';
+    case APPROVED = '通过';
         // 审核拒绝
-    case REJECTED = 'rejected';
+    case REJECTED = '拒绝';
 }

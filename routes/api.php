@@ -26,14 +26,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [TeamController::class, 'store']);
         Route::get('/{team}', [TeamController::class, 'show']);
         Route::put('/{team}', [TeamController::class, 'update']);
-        Route::delete('/{team}', [TeamController::class, 'destroy']);
 
         // 申请加入
         Route::post('/{team}/join', [TeamController::class, 'join']);
-        // 同意加入
-        Route::post('/{team}/join/{user}', [TeamController::class, 'joinAccept']);
+        // 审核加入
+        Route::post('/{team}/join_approve/{user}', [TeamController::class, 'joinApprove']);
+        // 申请拒绝
+        Route::post('/{team}/join_reject/{user}', [TeamController::class, 'joinReject']);
         // 退出团队
-        Route::delete('/{team}/leave', [TeamController::class, 'leave']);
+        Route::post('/{team}/leave', [TeamController::class, 'leave']);
+        // 移除成员
+        Route::delete('/{team}/users/{user}', [TeamController::class, 'removeUser']);
     });
 
     // 比赛

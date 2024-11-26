@@ -31,6 +31,26 @@ class Team extends Model
      */
     public function users()
     {
-        return $this->belongsToMany(User::class, 'team_user', 'team_id', 'user_id');
+        return $this
+            ->belongsToMany(User::class, 'team_user', 'team_id', 'user_id')
+            ->withPivot(['role', 'joined_at']);
+    }
+
+    /**
+     * 关联 team_applications 表
+     */
+    public function applications()
+    {
+        return $this
+            ->belongsToMany(User::class, 'team_applications', 'team_id', 'user_id')
+            ->withPivot(['status', 'message', 'created_at']);
+    }
+
+    /**
+     * 关联 games 表
+     */
+    public function games()
+    {
+        return $this->hasMany(Game::class);
     }
 }

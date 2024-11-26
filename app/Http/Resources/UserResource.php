@@ -23,6 +23,8 @@ class UserResource extends JsonResource
             'emergency_phone' => $this->emergency_phone,
             'introduction' => $this->introduction,
             'last_login_at' => $this->last_login_at,
+            // relations
+            'pivot' => $this->whenLoaded('pivot'),
         ];
     }
 }

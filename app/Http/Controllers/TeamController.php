@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TeamApplicationStatus;
 use App\Enums\TeamType;
 use App\Enums\TeamUserRole;
 use App\Http\Requests\TeamRequest;
 use App\Http\Resources\TeamResource;
 use App\Models\Team;
+use App\Models\User;
 
 class TeamController extends Controller
 {
@@ -17,7 +19,8 @@ class TeamController extends Controller
      */
     public function index()
     {
-        $teams = Team::where('owner_id', auth()->id())->orderByDesc('created_at')->get();
+        // 我加入的团队
+        $teams = auth()->user()->teams()->orderBy('created_at', 'desc')->get();
         return $this->respondWithSuccess(TeamResource::collection($teams));
     }
 
@@ -50,7 +53,13 @@ class TeamController extends Controller
      */
     public function show(Team $team)
     {
-        return $this->respondWithSuccess(new TeamResource($team));
+        return $this->respondWithSuccess(new TeamResource($team->load([
+            'users',
+            'applications' => function ($query) {
+                $query->wherePivot('status', TeamApplicationStatus::PENDING->value);
+            },
+            'games'
+        ])));
     }
 
     /**
@@ -108,5 +117,92 @@ class TeamController extends Controller
         return $this->respondWithSuccess([
             'special_id' => $specialId
         ]);
+    }
+
+    /**
+     * 申请加入团队
+     *
+     * @param Team $team
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function join(Team $team)
+    {
+        $message = request('message', '');
+        $team->applications()->attach(auth()->id(), [
+            'status' => TeamApplicationStatus::PENDING->value,
+            'message' => $message
+        ]);
+        return $this->respondOk('申请成功');
+    }
+
+    /**
+     * 批准加入团队
+     *
+     * @param Team $team
+     * @param User $user
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function joinApprove(Team $team, User $user)
+    {
+        $team->applications()->updateExistingPivot($user->id, [
+            'status' => TeamApplicationStatus::APPROVED->value
+        ]);
+        $team->users()->attach($user->id, [
+            'role' => TeamUserRole::MEMBER->value,
+            'joined_at' => now()
+        ]);
+        return $this->respondOk('审核批准成功');
+    }
+
+    /**
+     * 审核拒绝团队
+     *
+     * @param Team $team
+     * @param User $user
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function joinReject(Team $team, User $user)
+    {
+        $team->applications()->updateExistingPivot($user->id, [
+            'status' => TeamApplicationStatus::REJECTED->value
+        ]);
+        return $this->respondOk('审核拒绝成功');
+    }
+
+    /**
+     * 退出团队
+     *
+     * @param Team $team
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function leave(Team $team)
+    {
+        // 如果是拥有者不能退出
+        if ($team->owner_id === auth()->id()) {
+            return $this->respondError('拥有者不能退出团队');
+        }
+        $team->users()->detach(auth()->id());
+        return $this->respondOk('退出成功');
+    }
+
+    /**
+     * 移除成员
+     *
+     * @param Team $team
+     * @param User $user
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function removeUser(Team $team, User $user)
+    {
+        // 不能移除自己
+        if ($user->id === auth()->id()) {
+            return $this->respondError('不能移除自己');
+        }
+        // 不能移除拥有者
+        if ($team->owner_id === $user->id) {
+            return $this->respondError('不能移除拥有者');
+        }
+        $team->users()->detach($user->id);
+        return $this->respondOk('移除成功');
     }
 }

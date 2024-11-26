@@ -5,9 +5,9 @@ namespace App\Enums;
 enum TeamUserRole: string
 {
         // 队长
-    case OWNER = 'owner';
+    case OWNER = '队长';
         // 副队长
-    case MANAGER = 'manager';
+    case MANAGER = '副队长';
         // 成员
-    case MEMBER = 'member';
+    case MEMBER = '成员';
 }
